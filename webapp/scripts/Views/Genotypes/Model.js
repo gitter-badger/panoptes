@@ -211,7 +211,8 @@ define(["_", "Utils/TwoDCache", "MetaData", "DQX/ArrayBufferClient", "DQX/SQL"],
                 else
                   myurl.addUrlQueryItem("row_properties", that.query.row_order+'~'+that.table.row_table.primkey);
                 myurl.addUrlQueryItem("2D_properties", that.properties.join('~'));
-                ArrayBufferClient.request(myurl.toString(),
+                myurl.addUrlQueryItem("col_limit", 100);
+              ArrayBufferClient.request(myurl.toString(),
                     function(data) {
                         callback(start, end, data);
                     },

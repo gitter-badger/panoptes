@@ -35,7 +35,7 @@ def desc_to_dtype(desc):
     return dtype[col_type]
 
 
-def index_table_query(cur, table, fields, query, order):
+def index_table_query(cur, table, fields, query, order, limit):
     where = DQXDbTools.WhereClause()
     where.ParameterPlaceHolder = '%s'#NOTE!: MySQL PyODDBC seems to require this nonstardard coding
     where.Decode(query)
@@ -43,6 +43,9 @@ def index_table_query(cur, table, fields, query, order):
     query = "WHERE " + where.querystring_params if len(where.querystring_params) > 0 else ''
     fields_string = ','.join(fields)
     sqlquery = "SELECT {fields_string} FROM {table} {query} ORDER BY {order}".format(**locals())
+    #Set the limit to one past the req
+    if limit:
+        sqlquery += ' LIMIT ' + str(int(limit))
     print sqlquery
     cur.execute(sqlquery, where.queryparams)
     rows = cur.fetchall()
@@ -88,12 +91,27 @@ def get_table_ids(cur, datatable):
     result = cur.fetchall()[0]
     return result
 
+
 def get_workspace_table_name(tableid, workspaceid):
     return "{0}CMB_{1}".format(tableid, workspaceid)
 
 
 def response(request_data):
     return request_data
+
+
+def extract2D(dataset, datatable, row_idx, col_idx, first_dimension, two_d_properties):
+    hdf5_file = h5py.File(os.path.join(config.BASEDIR, '2D_data', dataset + '_' + datatable + '.hdf5'), 'r')
+    two_d_properties = dict((prop, None) for prop in two_d_properties)
+    for prop in two_d_properties.keys():
+        two_d_properties[prop] = hdf5_file[prop]
+    if len(col_idx) == 0 or len(row_idx) == 0:
+        two_d_result = {}
+        for prop in two_d_properties.keys():
+            two_d_result[prop] = np.array([], dtype=two_d_properties[prop].id.dtype)
+    else:
+        two_d_result = select_by_list(two_d_properties, row_idx, col_idx, first_dimension)
+    return two_d_result
 
 
 def handler(start_response, request_data):
@@ -108,6 +126,15 @@ def handler(start_response, request_data):
     row_qry = request_data['row_qry']
     row_order = request_data['row_order']
     first_dimension = request_data['first_dimension']
+    #Set limit to one past so we know if we hit it
+    try:
+        col_limit = int(request_data['col_limit'])+1
+    except KeyError:
+        col_limit = None
+    try:
+        row_limit = int(request_data['row_limit'])+1
+    except KeyError:
+        row_limit = None
 
     with DQXDbTools.DBCursor(request_data, dataset, read_timeout=config.TIMEOUT) as cur:
         col_tableid, row_tableid = get_table_ids(cur, datatable)
@@ -122,38 +149,34 @@ def handler(start_response, request_data):
                                        col_tablename,
                                        col_properties,
                                        col_qry,
-                                       col_order)
+                                       col_order,
+                                       col_limit)
 
         row_result = index_table_query(cur,
                                        row_tablename,
                                        row_properties,
                                        row_qry,
-                                       row_order)
-        col_idx = col_result[datatable + '_column_index']
-        row_idx = row_result[datatable + '_row_index']
+                                       row_order,
+                                       row_limit)
+
+    col_idx = col_result[datatable + '_column_index']
+    row_idx = row_result[datatable + '_row_index']
+    if len(col_idx) == col_limit:
+        result_set = [('_over_col_limit', np.array([0], dtype='i1'))]
+    else:
         del col_result[datatable + '_column_index']
         del row_result[datatable + '_row_index']
 
-    hdf5_file = h5py.File(os.path.join(config.BASEDIR, '2D_data', dataset+'_' + datatable + '.hdf5'), 'r')
+        two_d_result = extract2D(dataset, datatable, row_idx, col_idx, first_dimension, two_d_properties)
 
-    two_d_properties = dict((prop, None) for prop in two_d_properties)
-    for prop in two_d_properties.keys():
-        two_d_properties[prop] = hdf5_file[prop]
-    if len(col_idx) == 0 or len(row_idx) == 0:
-        two_d_result = {}
-        for prop in two_d_properties.keys():
-            two_d_result[prop] = np.array([], dtype=two_d_properties[prop].id.dtype)
-    else:
-        two_d_result = select_by_list(two_d_properties, row_idx, col_idx, first_dimension)
-
-    result_set = []
-    for name, array in col_result.items():
-        result_set.append((('col_'+name), array))
-    for name, array in row_result.items():
-        result_set.append((('row_'+name), array))
-    for name, array in two_d_result.items():
-        result_set.append((('2D_'+name), array))
-    data = gzip(''.join(arraybuffer.encode_array_set(result_set)))
+        result_set = []
+        for name, array in col_result.items():
+            result_set.append((('col_'+name), array))
+        for name, array in row_result.items():
+            result_set.append((('row_'+name), array))
+        for name, array in two_d_result.items():
+            result_set.append((('2D_'+name), array))
+    data = gzip(data=''.join(arraybuffer.encode_array_set(result_set)))
     status = '200 OK'
     response_headers = [('Content-type', 'text/plain'),
                         ('Content-Length', str(len(data))),
