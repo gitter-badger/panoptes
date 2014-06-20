@@ -154,6 +154,7 @@ define(["_", "Utils/TwoDCache", "MetaData", "DQX/ArrayBufferClient", "DQX/SQL"],
                 that.col_positions = that.position_columns(that.col_ordinal);
                 that.intervals_being_fetched = data.intervals_being_fetched;
                 that.intervals_overlimit = data.intervals_overlimit;
+                that.intervals = data.intervals;
 
               //TODO Set row index by sort
                 if (that.row_ordinal.length > 0)
@@ -212,7 +213,7 @@ define(["_", "Utils/TwoDCache", "MetaData", "DQX/ArrayBufferClient", "DQX/SQL"],
                 else
                   myurl.addUrlQueryItem("row_properties", that.query.row_order+'~'+that.table.row_table.primkey);
                 myurl.addUrlQueryItem("2D_properties", that.properties.join('~'));
-                myurl.addUrlQueryItem("col_limit", 100);
+                myurl.addUrlQueryItem("col_limit", "100");
               ArrayBufferClient.request(myurl.toString(),
                     function(data) {
                         callback(start, end, data);

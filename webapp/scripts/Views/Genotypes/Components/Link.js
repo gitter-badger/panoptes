@@ -41,7 +41,19 @@ define(["tween", "DQX/Utils"], function (tween, DQX) {
                ctx.lineTo(scale(overlimit[i].end), 5);
                ctx.stroke();
              }
-             ctx.stroke()
+             ctx.stroke();
+               var overlimit = model.intervals;
+               ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+               ctx.beginPath();
+               for (i = 0; i < overlimit.length; i++) {
+                   ctx.moveTo(scale(overlimit[i].start), 10);
+                   ctx.lineTo(scale(overlimit[i].end), 10);
+                   ctx.moveTo(scale(overlimit[i].start), 10);
+                   ctx.lineTo(scale(overlimit[i].start), 20);
+
+                   ctx.stroke();
+               }
+               ctx.stroke()
            };
            that.event = function (type, ev, offset) {
            };
