@@ -45,4 +45,3 @@ ShowInGenomeBrowser:                 #Requires that ColumnDataTable "IsPositionO
     - gq
     - total_depth
 
-GenomeMaxViewportSizeX: 5000
