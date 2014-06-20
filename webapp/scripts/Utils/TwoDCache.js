@@ -12,7 +12,6 @@ define(["Utils/RequestCounter"],
                 that.request_counter = RequestCounter();
 
                 that.intervals = [];
-                that._intervals_being_fetched = [];
                 that.provider_queue = [];
                 that.current_provider_requests = 0;
                 that.row_data_fetched = false;
@@ -113,7 +112,7 @@ define(["Utils/RequestCounter"],
                     return interval.start <= end && start <= interval.end;
                 });
                 var matching_intervals_with_data = matching_intervals.filter(function (interval) {
-                    return interval.fetched == true;
+                    return interval.fetched && !interval.overlimit;
                 });
                 var interval, col_ordinal_array, start_index, end_index;
                 if (matching_intervals_with_data.length == 1) {
@@ -227,11 +226,15 @@ define(["Utils/RequestCounter"],
                 for (i = 0, ref = missing_intervals.length; i < ref; i++) {
                     interval = missing_intervals[i];
                     interval.fetched = false;
-                    that._intervals_being_fetched.push(interval);
                     that.intervals.splice(bisect(that.intervals, interval.start), 0, interval);
                     that._add_to_provider_queue(interval);
                 }
-                result.intervals_being_fetched = that._intervals_being_fetched;
+                result.intervals_being_fetched = matching_intervals.filter(function (interval) {
+                  return !interval.fetched;
+                });
+                result.intervals_overlimit = matching_intervals.filter(function (interval) {
+                  return interval.overlimit;
+                });
                 return result;
             };
 
@@ -259,10 +262,6 @@ define(["Utils/RequestCounter"],
                 match = that.intervals.filter(function (i) {
                     return i.start === start && i.end === end;
                 });
-                //Remove from the being fetched list
-                that._intervals_being_fetched = that._intervals_being_fetched.filter(function (i) {
-                    return i.start != match[0].start;
-                });
                 if (match.length !== 1) {
                     console.log("Got data for non-existant interval or multiples", start, end);
                     return;
@@ -270,29 +269,34 @@ define(["Utils/RequestCounter"],
                 match = match[0];
                 if (data) {
                     match.fetched = true;
-                    match.col = {};
-                    match.twoD = {};
                     var props = _.keys(data);
-                    for (var i = 0, ref = props.length; i < ref; i++) {
+                    //Check that we didn't go over limit
+                    if (props[0] == '_over_col_limit') {
+                      match.overlimit = true;
+                    } else {
+                      match.col = {};
+                      match.twoD = {};
+                      for (var i = 0, ref = props.length; i < ref; i++) {
                         var full_prop = props[i];
                         var type = full_prop.split('_')[0];
-                        var prop = full_prop.substring(full_prop.indexOf('_')+1);
+                        var prop = full_prop.substring(full_prop.indexOf('_') + 1);
                         if (type == 'col')
-                            match.col[prop] = data[full_prop].array;
+                          match.col[prop] = data[full_prop].array;
                         if (type == 'row')
-                            that.row_data[prop] = data[full_prop].array;
+                          that.row_data[prop] = data[full_prop].array;
                         if (type == '2D') {
-                            var packed = data[full_prop];
-                            match.twoD[prop] = _.times(packed.shape[0], function(i) {
-                                return that.slice(packed.array, i*packed.shape[1], (i+1)*packed.shape[1]);
-                            });
+                          var packed = data[full_prop];
+                          match.twoD[prop] = _.times(packed.shape[0], function (i) {
+                            return that.slice(packed.array, i * packed.shape[1], (i + 1) * packed.shape[1]);
+                          });
                         }
-
+                      }
                     }
-                    //TODO MERGE TO NEIGHBOURS
+                    //TODO MERGE TO NEIGHBOURS?
                 } else {
+                    //We didn't get data so remove this interval
                     that.intervals = that.intervals.filter(function (i) {
-                        return i.elements !== null;
+                        return i !== match;
                     });
                 }
                 that.update_callback();

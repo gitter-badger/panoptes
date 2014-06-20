@@ -153,8 +153,9 @@ define(["_", "Utils/TwoDCache", "MetaData", "DQX/ArrayBufferClient", "DQX/SQL"],
                 });
                 that.col_positions = that.position_columns(that.col_ordinal);
                 that.intervals_being_fetched = data.intervals_being_fetched;
+                that.intervals_overlimit = data.intervals_overlimit;
 
-                //TODO Set row index by sort
+              //TODO Set row index by sort
                 if (that.row_ordinal.length > 0)
                     that.row_index = _.times(that.row_ordinal.length, function (i) {return i;});
                 else
