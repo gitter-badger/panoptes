@@ -207,7 +207,7 @@ define(["Utils/RequestCounter"],
                     if (end > last_match.end) {
                         missing_intervals.push({
                             'start': last_match.end,
-                            'end': Math.ceil(end/1000)*1000
+                            'end': Math.ceil(end/rounded_end)*rounded_end
                         });
                     }
                 }
@@ -217,7 +217,6 @@ define(["Utils/RequestCounter"],
                    return interval.overlimit && (interval.end - interval.start) > target_interval_size;
                 });
                 _.forEach(overlimit_intervals, function(overlimit_interval) {
-                   missing_intervals.push(overlimit_interval);
                    that.intervals = that.intervals.filter(function (interval) {
                        return overlimit_interval !== interval;
                    })
@@ -226,23 +225,34 @@ define(["Utils/RequestCounter"],
                 bisect = d3.bisector(function (interval) {
                     return interval.start;
                 }).left;
-                //Split the missing regions into ones of the target size if they are bigger and are overlimit
-                var resized_missing_intervals = [];
-                for (i = 0, ref = missing_intervals.length; i < ref; i++) {
-                    interval = missing_intervals[i];
-                    if (interval.end - interval.start < target_interval_size && interval.overlimit)
-                        resized_missing_intervals.push(interval);
-                    else {
-                        var i_start = interval.start;
-                        while (i_start + target_interval_size < interval.end) {
-                            resized_missing_intervals.push({start: i_start, end: i_start + target_interval_size});
-                            i_start += target_interval_size;
-                        }
-                        resized_missing_intervals.push({start: i_start, end: interval.end});
+                //Split the intervals into ones of the target size if they are bigger and are overlimit
+                for (i = 0, ref = overlimit_intervals.length; i < ref; i++) {
+                    var i_start, i_end;
+                    interval = overlimit_intervals[i];
+                    //If the interval starts before our range we don't want to re-request that bit
+                    if (interval.start < rounded_start) {
+                        var new_interval = {start: interval.start, end: rounded_start, fetched: true, overlimit: true};
+                        that.intervals.splice(bisect(that.intervals, new_interval.start), 0, new_interval);
+                        i_start = rounded_start;
+                    } else {
+                        i_start = interval.start;
                     }
+                    //Same for the end bit as the start
+                    if (interval.end > rounded_end) {
+                        new_interval = {start: rounded_end, end: interval.end, fetched: true, overlimit: true};
+                        that.intervals.splice(bisect(that.intervals, new_interval.start), 0, new_interval);
+                        i_end = rounded_end;
+                    } else {
+                        i_end = interval.end;
+                    }
+                    //Then for those in the middle we do want to re-request add to missing
+                    while (i_start + target_interval_size < i_end) {
+                        missing_intervals.push({start: i_start, end: i_start + target_interval_size});
+                        i_start += target_interval_size;
+                    }
+                    if (i_start != i_end)
+                        missing_intervals.push({start: i_start, end: i_end});
                 }
-                missing_intervals = resized_missing_intervals;
-
                 if (retrieve_missing) {
                     for (i = 0, ref = missing_intervals.length; i < ref; i++) {
                         interval = missing_intervals[i];
@@ -286,7 +296,7 @@ define(["Utils/RequestCounter"],
                     return i.start === start && i.end === end;
                 });
                 if (match.length !== 1) {
-                    console.log("Got data for non-existant interval or multiples", start, end);
+                    //Got data for non-existant interval or multiples
                     return;
                 }
                 match = match[0];
