@@ -8,6 +8,8 @@ IsPositionOnGenome: false
 FetchRecordCount: true
 QuickFindFields: ID
 
+AllowSubSampling: true
+
 Properties:
 
 - Id: ID

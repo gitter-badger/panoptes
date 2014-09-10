@@ -11,7 +11,7 @@ Position: pos
 
 QuickFindFields: SnpName
 
-
+AllowSubSampling: true
 
 Properties:
 

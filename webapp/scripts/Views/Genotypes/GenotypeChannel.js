@@ -181,15 +181,23 @@ define(["require", "_", "d3", "blob", "filesaver", "DQX/Model", "DQX/SQL", "DQX/
                 view_controls.addControl(Controls.VerticalSeparator(15));
                 view_controls.addControl(that.download_button);
 
-                that.col_query = QueryTool.Create(table_info.col_table.id, {includeCurrentQuery:true});
+                that.col_query = QueryTool.Create(table_info.col_table.id, {
+                    includeCurrentQuery:true,
+                    hasSubSampler: that.table_info.col_table.settings.AllowSubSampling,
+                    subSamplingOptions: QueryTool.getSubSamplingOptions_All()
+                });
                 that.col_query.notifyQueryUpdated = function() {
-                  model_params.set('col_query', that.col_query.get());
+                  model_params.set('col_query', that.col_query.getForFetching());
                 };
                 var col_query_tool = that.col_query.createQueryControl({hasSection: true, hasQueryString: true, defaultHidden: true});
                 controls_group.addControl(col_query_tool);
-                that.row_query = QueryTool.Create(table_info.row_table.id, {includeCurrentQuery:true});
+                that.row_query = QueryTool.Create(table_info.row_table.id, {
+                    includeCurrentQuery:true,
+                    hasSubSampler: that.table_info.row_table.settings.AllowSubSampling,
+                    subSamplingOptions: QueryTool.getSubSamplingOptions_All()
+                });
                 that.row_query.notifyQueryUpdated = function() {
-                  model_params.set('row_query', that.row_query.get());
+                  model_params.set('row_query', that.row_query.getForFetching());
                   model_params.set('page', 1);
                 };
                 var row_query_tool = that.row_query.createQueryControl({hasSection: true, hasQueryString: true, defaultHidden: true});
