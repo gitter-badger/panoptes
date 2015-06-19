@@ -28,6 +28,7 @@ let DataTableWithQuery = React.createClass({
     table: React.PropTypes.string.isRequired,
     query: React.PropTypes.string,
     order: React.PropTypes.string,
+    ascending: React.PropTypes.bool,
     columns: ImmutablePropTypes.listOf(
       React.PropTypes.string
     ),
@@ -56,15 +57,14 @@ let DataTableWithQuery = React.createClass({
 
   render() {
     let actions = this.getFlux().actions;
-    let {table, query, sidebar, componentUpdate} = this.props;
+    let {table, query, order, sidebar, componentUpdate} = this.props;
     let {table_config} = this.state;
     let {icon, description} = this.state.table_config.toObject();
 
     let sidebar_content = (
       <div className="sidebar">
         <SidebarHeader icon={icon} description={description}/>
-        <QueryString table={table_config} query={query}/>
-        <FlatButton label="Change Query"
+        <FlatButton label="Change Filter"
                     primary={true}
                     onClick={() => actions.layout.modalOpen('ui/QueryPicker',
                       {
@@ -84,6 +84,8 @@ let DataTableWithQuery = React.createClass({
             <Icon className='pointer icon'
                   name={sidebar ? 'arrow-left' : 'bars'}
                   onClick={() => componentUpdate({sidebar: !sidebar})}/>
+            <QueryString className='text' prepend='Filter:' table={table_config} query={query}/>
+            <span className="text">table_config.columnMap[order].</span>
           </div>
           <DataTableView className='grow'
             dataset={initialConfig.dataset}
@@ -96,10 +98,3 @@ let DataTableWithQuery = React.createClass({
 });
 
 module.exports = DataTableWithQuery;
-
-
-//<ButtonToolbar className="top-bar">
-//  <Button onClick={() => componentUpdate({sidebar: !sidebar})}>
-//    <Icon className='icon' name={sidebar ? 'arrow-left' : 'bars'}/>
-//  </Button>
-//</ButtonToolbar>

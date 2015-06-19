@@ -74,7 +74,6 @@ let Panoptes = React.createClass({
     let l_state = this.state.layout.toObject();
     let p_state = this.state.panoptes.toObject();
     let modal = l_state.modal.toObject();
-    let iconStyle = {color:'white'};
     return (
       <div>
         <div className="page">

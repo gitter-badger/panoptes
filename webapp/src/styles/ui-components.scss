@@ -82,54 +82,52 @@
   position: absolute;
   top: 0;
   left: 0;
-  //z-index: 10;
-  .popup {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    border: 1px solid rgb(110, 110, 110);
-    box-shadow: 4px 4px 20px 2px rgba(0, 0, 0, 0.25);
-    background: white;
-    z-index: 2;
+}
+.popup {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  border: 1px solid rgb(110, 110, 110);
+  box-shadow: 4px 4px 20px 2px rgba(0, 0, 0, 0.25);
+  background: white;
+  z-index: 2;
 
-    .popup-drag {
-      position: absolute;
-      height: $topbar-height;
-      width: calc(100% - 30px);
-      top: 0;
-      left: 0;
-      cursor: move;
-      z-index: 3;
-    }
+  .popup-drag {
+    position: absolute;
+    height: $topbar-height;
+    width: calc(100% - 30px);
+    top: 0;
+    left: 0;
+    cursor: move;
+    z-index: 3;
+  }
 
-    .popup-header {
-      overflow: hidden;
-      white-space: nowrap;
-      height: $topbar-height;
-      //padding: 7px 7px 7px 12px;
-      cursor: move;
-      font-size: 10pt;
-      font-weight: bold;
-      color: rgb(255, 255, 255);
-      //background: $primary-color;
-      background: linear-gradient(to right, #000000 0%, #757575 100%);display: flex;
-      //MD like shadow needs relative and z-index
-      box-shadow: $z-1-shadow;
-      position: relative;
-      z-index: 3;
+  .popup-header {
+    overflow: hidden;
+    white-space: nowrap;
+    height: $topbar-height;
+    //padding: 7px 7px 7px 12px;
+    cursor: move;
+    font-size: 10pt;
+    font-weight: bold;
+    color: rgb(255, 255, 255);
+    //background: $primary-color;
+    background: linear-gradient(to right, #000000 0%, #757575 100%);display: flex;
+    //MD like shadow needs relative and z-index
+    box-shadow: $z-1-shadow;
+    position: relative;
+    z-index: 3;
 
-      .title {
-        flex: 1;
-        vertical-align: middle;
-        line-height: $topbar-height;
-      }
-    }
-
-    .popup-body {
-      position: relative;
+    .title {
       flex: 1;
+      vertical-align: middle;
+      line-height: $topbar-height;
     }
+  }
 
+  .popup-body {
+    position: relative;
+    flex: 1;
   }
 }
 
@@ -239,6 +237,16 @@
     background: transparent;
     color: white;
   }
+
+  .text {
+    vertical-align: middle;
+    line-height: $topbar-height;
+    color: white;
+    margin-left: 7px;
+    margin-right: 7px;
+
+  }
+
 }
 
 .datatable {

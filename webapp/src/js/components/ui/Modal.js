@@ -1,6 +1,7 @@
 const React = require('react');
 const PureRenderMixin = require('mixins/PureRenderMixin');
 const classNames = require('classnames');
+const Icon = require('ui/Icon');
 
 var Modal = React.createClass({
   mixins: [PureRenderMixin],
@@ -49,11 +50,12 @@ var Modal = React.createClass({
            onClick={this.handleOverlayClick}>
         <div className="popup"
           {...other}>
-          <div className="header">
-            {faIcon ? <Icon className='icon' name={faIcon}/> : null}
-            {title}
+          <div className="popup-header">
+            {faIcon ? <Icon name={faIcon}/> : null}
+            <div className="title">{title}</div>
+            <Icon className="pointer close" name="close" onClick={this.handleClose}/>
           </div>
-          <div className="body">
+          <div className="popup-body">
             {children}
           </div>
         </div>
