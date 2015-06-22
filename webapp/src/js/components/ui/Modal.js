@@ -8,10 +8,9 @@ var Modal = React.createClass({
 
   propTypes: {
     visible: React.PropTypes.bool,
-    closable: React.PropTypes.bool,
-    title: React.PropTypes.string, //Used in title bar
-    faIcon: React.PropTypes.string,
-    onClose: React.PropTypes.func
+    unclosable: React.PropTypes.bool,
+    onClose: React.PropTypes.func,
+    children: React.PropTypes.element
   },
 
   getDefaultProps() {
@@ -23,10 +22,31 @@ var Modal = React.createClass({
     };
   },
 
+  getInitialState() {
+    return {
+      icon: null,
+      title: null
+    }
+  },
+
+  componentDidMount() {
+    this.componentDidUpdate();
+  },
+
+  componentDidUpdate() {
+    let {child} = this.refs;
+    if (child) {
+      child.icon ? this.setState({icon:child.icon()}) : null;
+      child.title ? this.setState({title:child.title()}) : null;
+    }
+  },
+
   handleClose(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.props.onClose();
+    if (!this.props.uncloseable) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.props.onClose();
+    }
   },
 
   handleOverlayClick(e) {
@@ -39,7 +59,10 @@ var Modal = React.createClass({
   },
 
   render: function () {
-    let { visible, closable, onClose, faIcon, title, children, ...other } = this.props;
+    let { visible, unclosable, onClose, children, ...other } = this.props;
+    let { icon, title } = this.state;
+    if (!children)
+      return null;
     let classes = {
       modal: true,
       visible: visible
@@ -51,12 +74,12 @@ var Modal = React.createClass({
         <div className="popup"
           {...other}>
           <div className="popup-header">
-            {faIcon ? <Icon name={faIcon}/> : null}
+            {icon ? <Icon name={icon}/> : null}
             <div className="title">{title}</div>
-            <Icon className="pointer close" name="close" onClick={this.handleClose}/>
+            {!unclosable ? <Icon className="pointer close" name="close" onClick={this.handleClose}/> : null}
           </div>
           <div className="popup-body">
-            {children}
+            {React.addons.cloneWithProps(children, {ref: 'child' })}
           </div>
         </div>
       </div>)

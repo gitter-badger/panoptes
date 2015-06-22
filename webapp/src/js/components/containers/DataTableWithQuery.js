@@ -7,7 +7,7 @@ const FluxMixin = require('mixins/FluxMixin');
 const StoreWatchMixin = require('mixins/StoreWatchMixin');
 
 const Sidebar = require('react-sidebar');
-const DataTableView = require('containers/DataTableView');
+const DataTableView = require('ui/DataTableView');
 const SidebarHeader = require('ui/SidebarHeader');
 const Icon = require('ui/Icon');
 const QueryString = require('ui/QueryString');
@@ -24,6 +24,7 @@ let DataTableWithQuery = React.createClass({
 
   propTypes: {
     componentUpdate: React.PropTypes.func.isRequired,
+    title: React.PropTypes.string,
     dataset: React.PropTypes.string.isRequired,
     table: React.PropTypes.string.isRequired,
     query: React.PropTypes.string,
@@ -53,6 +54,15 @@ let DataTableWithQuery = React.createClass({
     return {
       table_config: this.getFlux().store('PanoptesStore').getTable(this.props.table)
     }
+  },
+
+  icon() {
+    return this.state.table_config.get('icon');
+  },
+
+  title() {
+    //console.log(this.state.table_config.toJS());
+    return this.props.title || this.state.table_config.get('tableCapNamePlural');
   },
 
   render() {
@@ -85,7 +95,7 @@ let DataTableWithQuery = React.createClass({
                   name={sidebar ? 'arrow-left' : 'bars'}
                   onClick={() => componentUpdate({sidebar: !sidebar})}/>
             <QueryString className='text' prepend='Filter:' table={table_config} query={query}/>
-            <span className="text">table_config.columnMap[order].</span>
+
           </div>
           <DataTableView className='grow'
             dataset={initialConfig.dataset}
